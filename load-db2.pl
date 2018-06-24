@@ -150,7 +150,7 @@ sub create_table {
     my ($table) = $statement->tables;
     my $re_skip;
 
-    my @columns = map { $_->name } $statement->columns;
+    my @columns = map { $_->name->{column} } $statement->columns;
     $columns{$table} = \@columns;
     my @unknown = grep {! exists $keep_values{$table}->{spec}->{$_}} @columns;
     if (@unknown) {

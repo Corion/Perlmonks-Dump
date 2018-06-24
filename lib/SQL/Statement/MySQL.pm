@@ -68,7 +68,8 @@ package SQL::Parser::MySQL;
 use strict;
 use base qw(Class::Accessor);
 use List::Util qw( max ); # for better error reporting
-require SQL::Statement;
+use SQL::Statement;
+use SQL::Statement::Util;
 use vars qw(%unquote $sql_name);
 
 $sql_name = qr/\`?(\w+)\`?/;
@@ -173,7 +174,7 @@ sub parse {
         $self->current_table( SQL::Statement::Table->new($table));
         $self->tables->{ $table }->{keycolumns} = \@keycolumns;
         $self->tables->{ $table }->{primarykeys} = \@primaries;
-        $self->tables->{ $table }->{columns} = [ map { SQL::Statement::Column->new({
+        $self->tables->{ $table }->{columns} = [ map { SQL::Statement::Util::Column->new({
                            table => $table,
                            column => $_,
                          })} @columns
