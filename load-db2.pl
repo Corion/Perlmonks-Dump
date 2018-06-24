@@ -442,7 +442,7 @@ output polls (polls_id,choices,numbers,gimmick,gimmickchoice,prologue)
 purge pollvote
 
 # Should this be dropped/purged?
-drop protouser
+purge protouser
 
 drop rating
 
@@ -478,7 +478,7 @@ output themesetting (themesetting_id,parent_theme)
 # The stuff in the tomb is gone for mortals
 purge tomb
 
-output user (user_id,nick='',realname='',passwd='',email='',karma=0,givevotes='Y',votesleft=0,votes=0,user_scratchpad='',experience,imgsrc,lastupdate,lasttime,secret='',voteavg=1)
+output user (user_id,nick='',realname='',passwd='',passwd_hash='',email='',karma=0,givevotes='Y',votesleft=0,votes=0,user_scratchpad='',experience,imgsrc,lastupdate,lasttime,secret='',voteavg=1)
 
 # This is just to keep the webservers in sync
 #output version (version_id,version)
