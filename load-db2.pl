@@ -479,7 +479,7 @@ output themesetting (themesetting_id,parent_theme)
 # The stuff in the tomb is gone for mortals
 purge tomb
 
-output user (user_id,nick='',realname='',passwd='',passwd_hash='',email='',karma=0,givevotes='Y',votesleft=0,votes=0,user_scratchpad='',experience,imgsrc,lastupdate,lasttime,secret='',voteavg=1)
+copy user (user_id,nick='',realname='',passwd='',passwd_hash='',email='',karma=0,givevotes='Y',votesleft=0,votes=0,user_scratchpad='',experience,imgsrc,lastupdate,lasttime,secret='',voteavg=1)
 
 # This is just to keep the webservers in sync
 #output version (version_id,version)
