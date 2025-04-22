@@ -525,6 +525,12 @@ purge tickerlog
       WHERE document_id IN (SELECT wiki_id FROM wiki)
 ;
 
+-- Purge all user settings except mine
+     UPDATE setting
+        SET vars = ''
+      WHERE setting_id IN (SELECT user_id FROM user where user_id not in (5348,518801))
+;
+
 %%
 -- Set the magic node number for this dump
 -- This requires far more thought, because we (could) need to really create a new
