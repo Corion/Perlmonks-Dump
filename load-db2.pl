@@ -545,6 +545,9 @@ UPDATE user SET passwd = 's3crit' WHERE user_id = 5348;
 -- Co-Rion
 UPDATE user SET passwd = 's3crit' WHERE user_id = 518801;
 
+-- Patch some SQLite-specific code into some nodes to reduce the noise:
+update htmlcode set code='' where htmlcode_id=(select node_id from node where title='recordhit');
+
 CREATE TABLE traffic_stats (
     node_id INTEGER PRIMARY KEY NOT NULL,
     day     DATETIME,
