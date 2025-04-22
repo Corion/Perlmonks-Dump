@@ -422,6 +422,7 @@ output nodelet (nodelet_id,nltext,nlcode,updateinterval,nlgoto,parent_container,
 purge nodepin
 output nodehelp(nodehelp_id,nodehelp_text)
 output nodetype (nodetype_id,readers_user,writers_user,deleters_user,restrict_nodetype,extends_nodetype,restrictdupes,sqltable,grouptable,updaters_user)
+purge node_ipaddr
 
 output note (note_id,parent_node,position,root_node)
 
