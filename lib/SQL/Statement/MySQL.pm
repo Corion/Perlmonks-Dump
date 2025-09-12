@@ -131,7 +131,7 @@ sub parse {
     my ($self,$sql) = @_;
     my $sep = $self->line_separator;
     $sql =~ s/\Q$sep\E\z//sm;
-    
+
     my $values;
     my ($table,$columns,@columns,$command);
     if ($sql =~ /^(?>--[^\n]*\n+)*\s*INSERT INTO\s*$sql_name\s+VALUES \((.*)\)\z/smi) {
@@ -170,7 +170,7 @@ sub parse {
         };
         #warn $columns;
         @keycolumns = ($columns =~ s/,\n\s*KEY\s*\w+\s*\(.*\)\s*//g);
-        @columns = (map { /(\w+)/ ? $1 : '<unknown>' } split /,\n/, $columns);
+        @columns = (map { /(\w+)/ ? $1 : '<unknown>' } split /,\r?\n/, $columns);
         $self->current_table( SQL::Statement::Table->new($table));
         $self->tables->{ $table }->{keycolumns} = \@keycolumns;
         $self->tables->{ $table }->{primarykeys} = \@primaries;
@@ -243,7 +243,8 @@ values to something directly useable by Perl.
 
 =cut
 
-my $string = qr/(?:(?>')(?:(?>[^\\']+)|(?>(?:\\['\\"rn0A-Z])+))*')/;
+#my $string = qr/(?:(?>')(?:(?>[^\\']+)|(?>(?:\\['\\"rn0A-Z])+))*')/;
+my $string = qr/(?>'(?:(?>[^\\']+)|(?>(?:\\['\\"rn0A-Z])+))*')/;
 my $null   = qr/(?:(?>NULL))/;
 my $num    = qr/(?:(?>-?\d+)(?:\.\d+)?)/;
 my $value  = qr/(?:$string|$null|$num)/;
@@ -251,7 +252,7 @@ my $value  = qr/(?:$string|$null|$num)/;
 sub parse_values {
     my ($self,$values) = @_;
     my @r;
-    
+
     while ($values =~ /\G(?:^|\),\(|\s*$)/gc) {
         my @res;
         while ($values =~ /\G($value)(?:,?)/gc) {
@@ -261,7 +262,7 @@ sub parse_values {
         push @r, \@res
             if @res;
     };
-    
+
     my $consumed = pos $values;
     if (substr($values,$consumed) =~ /\S/ and $consumed != length $values) {
         while ($values =~ s/^($value),//) {
