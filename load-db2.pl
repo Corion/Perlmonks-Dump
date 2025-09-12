@@ -107,10 +107,10 @@ sub to_sqlite {
 #     column=defined => force value
 
 my %override_columns;
-my ($keep,$clean,$postamble);
+my ($keep,$setup_db,$clean,$postamble);
 {
     local $/ = '%%';
-    ($keep,$clean,$postamble) = map { chomp $_; $_ } <DATA>;
+    ($keep,$setup_db,$clean,$postamble) = map { chomp $_; $_ } <DATA>;
     close DATA;
 };
 
@@ -149,7 +149,6 @@ sub create_table {
     my ($statement,$execute) = @_;
     my ($table) = $statement->tables;
     my $re_skip;
-
     my @columns = map { $_->name->{column} } $statement->columns;
     $columns{$table} = \@columns;
     my @unknown = grep {! exists $keep_values{$table}->{spec}->{$_}} @columns;
@@ -252,6 +251,7 @@ sub output_row {
         my @set_values = @$r;
         @set_values[ keys %override_columns ] = values %override_columns;
         local $" = ",";
+
         output "INSERT INTO $table VALUES (@set_values);";
     };
 }
@@ -275,13 +275,17 @@ my $count;
 
 my $override_row;
 $/ = ";\n";
-while (my $sql = <$fh>) {
+
+my @setup_db = split /;\r?\n/, $setup_db;
+
+while (my $sql = (shift @setup_db // <$fh>)) {
     $count++;
     next if $sql =~ /$re_skip/;
     next if $sql =~ /^\s*(?:^-- [^\n]+\n)+$re_skip/m;
     next unless $sql =~ /\S/;
 
     my $statement = $p->parse($sql);
+    #die "$sql" unless $statement;
     next unless $statement; # empty statements do happen
 
     if ($statement->command eq 'INSERT') {
@@ -331,6 +335,7 @@ if (! $check_only) {
 };
 
 # Now, output all tables still left in the SQLite tables:
+push @dump_table, 'wiki'; # special table that we create later
 for my $table (@dump_table) {
     progress "Saving table '$table' from database";
     my $sql = sprintf "SELECT %s FROM %s", join( ",", @{$columns{$table}}), $table;
@@ -338,6 +343,17 @@ for my $table (@dump_table) {
     $sth->execute();
     while (my $res = $sth->fetchrow_arrayref()) {
         #output "INSERT INTO $table VALUES (" . join( ",", map { "'$_'" } @$res ) . ");"
+
+        # I think re-quoting here is not necessary, since the values are still quoted?!
+        # but sometimes we get a really empty string, which was NULL before
+        for (@$res) {
+            if( ! defined) {
+                $_ = "''"
+            } elsif( $_ eq '') {
+                $_ = "''";
+            }
+        }
+
         output "INSERT INTO $table VALUES (" . join( ",", @$res ) . ");"
     };
 }
@@ -396,6 +412,8 @@ purge editorvote
 # Used for storing sent out "send me my password" details
 purge emailpwd
 
+copy generic_data_list (generic_data_list_id, add_ts, add_user_id, del_ts, del_user_id, node_id, data)
+
 output htmlcode (htmlcode_id,code)
 
 purge ip
@@ -436,6 +454,8 @@ output perlnews (perlnews_id,linklocation)
 
 # picked_nodes need to be re-picked
 purge picked_nodes
+
+purge pending_activations
 
 output polls (polls_id,choices,numbers,gimmick,gimmickchoice,prologue)
 
@@ -488,6 +508,8 @@ purge version
 purge vote
 purge votehistory
 
+# It seems this table has been lost to bitrot, but we recreate it below
+# It still exists on the live instance
 copy wiki (wiki_id, readers, writers)
 
 output hint (hint_id,height,width,explains_node)
@@ -503,7 +525,8 @@ output newuserimage (newuserimage_id,timestamp)
 output keyword (keyword_id,word)
 output keywordnode (keyword_id,node_id,user_id)
 output keywords (node_id,rating,word)
-output largedoc (largedoc_id,largedoctext)
+#output largedoc (largedoc_id,largedoctext)
+purge largedoc
 output level_buckets (experience,num,level)
 output maintenance (maintenance_id,maintain_nodetype,maintaintype)
 
@@ -518,11 +541,28 @@ purge tickerlog
 # or equal to SELECT max(node_id) FROM nodes
 
 %%
+-- For some reason, the table "wiki" (last table asciibetically) is missing from the backup
+-- MySQL dump 10.11 , 20250907
+CREATE TABLE wiki (
+  wiki_id int(11) NOT NULL default 0,
+  readers char(16) NOT NULL default '',
+  writers char(16) NOT NULL default ''
+);
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `wiki`
+--
+
+-- XXX do not commit this line?!
+INSERT INTO wiki VALUES (73988,'lvl_3','lvl_10'),(74283,'ug_225942','ug_59438'),(76333,'lvl_1','lvl_1'),(106868,'ug_225942','ug_106850'),(96695,'ug_225942','ug_114'),(91826,'ug_225942','ug_114'),(110265,'ug_225942','ug_106850'),(133122,'ug_225942','ug_11732'),(157365,'ug_225942','ug_114'),(159568,'ug_114','ug_114'),(166549,'ug_225942','ug_114'),(168299,'ug_225942','ug_114'),(171967,'lvl_1','ug_114'),(174180,'ug_225942','ug_17342'),(178924,'ug_225942','ug_114'),(200924,'ug_225942','ug_114'),(218593,'ug_225942','ug_114'),(222493,'ug_225942','ug_106850'),(228724,'ug_225942','ug_114'),(234285,'ug_225942','ug_114'),(237008,'ug_225942','ug_17342'),(240052,'ug_225942','ug_114'),(240586,'ug_225942','ug_17342'),(242483,'ug_225942','ug_114'),(291673,'ug_225942','ug_114'),(320945,'ug_225942','ug_114'),(322009,'ug_225942','ug_225942'),(328159,'ug_225942','ug_114'),(331288,'ug_225942','ug_114'),(361810,'ug_225942','ug_114'),(368198,'ug_225942','ug_114'),(368267,'ug_114','ug_114'),(379726,'ug_225942','ug_114'),(388734,'ug_225942','ug_114'),(403440,'ug_225942','ug_114'),(403447,'ug_225942','ug_114'),(405784,'ug_225942','ug_114'),(420478,'ug_225942','ug_114'),(461491,'ug_225942','ug_106850'),(475188,'ug_225942','ug_275323'),(489631,'ug_225942','ug_275323'),(500173,'ug_225942','ug_114'),(510149,'ug_225942','ug_499790'),(517102,'ug_114','ug_114'),(535912,'ug_114','ug_114'),(545862,'lvl_1','ug_225942'),(566981,'ug_225942','ug_114'),(567891,'ug_114','ug_114'),(581860,'ug_225942','ug_114'),(591498,'ug_225942','ug_114'),(593415,'ug_225942','ug_114'),(615833,'lvl_1','ug_499790'),(617670,'ug_114','ug_114'),(617715,'ug_114','ug_114'),(686081,'ug_225942','ug_114'),(703301,'ug_114','ug_114'),(725769,'ug_225942','ug_114'),(739420,'ug_225942','ug_114'),(742222,'ug_114','ug_114'),(786306,'ug_114','ug_114'),(866617,'ug_114','ug_114'),(979477,'ug_225942','ug_114'),(1131177,'ug_114','ug_114'),(1145485,'lvl_1','ug_225942'),(1173852,'lvl_1','ug_1173852'),(1175476,'ug_1175476','ug_1175476'),(1175616,'lvl_1','ug_1175616'),(1210529,'ug_1210529','ug_1210529'),(1215407,'ug_114','ug_114'),(1217124,'lvl_10','ug_114'),(11131027,'ug_225942','ug_11732'),(11156175,'ug_106850','ug_106850');
+
+%%
 -- Purge all wiki contents especially the gods' wiki
 -- also weed out the "old wiki" copies!
-     UPDATE document
-        SET doctext = '''*deleted*'''
-      WHERE document_id IN (SELECT wiki_id FROM wiki)
+    UPDATE document
+       SET doctext = '''*deleted*'''
+     WHERE document_id IN (SELECT wiki_id FROM wiki)
 ;
 
 -- Purge all user settings except mine
@@ -544,9 +584,6 @@ purge tickerlog
 UPDATE user SET passwd = 's3crit' WHERE user_id = 5348;
 -- Co-Rion
 UPDATE user SET passwd = 's3crit' WHERE user_id = 518801;
-
--- Patch some SQLite-specific code into some nodes to reduce the noise:
-update htmlcode set code='' where htmlcode_id=(select node_id from node where title='recordhit');
 
 CREATE TABLE traffic_stats (
     node_id INTEGER PRIMARY KEY NOT NULL,
