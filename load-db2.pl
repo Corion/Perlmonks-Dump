@@ -414,6 +414,8 @@ purge emailpwd
 
 copy generic_data_list (generic_data_list_id, add_ts, add_user_id, del_ts, del_user_id, node_id, data)
 
+copy goodstuff (goodstuff_id, created, goodnode_id, rater_id, keywords, typeflag)
+
 output htmlcode (htmlcode_id,code)
 
 purge ip
